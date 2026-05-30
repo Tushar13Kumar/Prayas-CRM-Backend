@@ -13,6 +13,63 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const User = require('./models/user.model');
+const authMiddleware = require('./middleware/auth.middleware');
+
+// SIGNUP
+app.post('/signup', async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "Email already registered." });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({ name, email, password: hashedPassword });
+    await user.save();
+
+    const token = jwt.sign(
+      { userId: user._id, email: user.email, name: user.name },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.status(201).json({ token, user: { name: user.name, email: user.email } });
+  } catch (error) {
+    res.status(500).json({ error: "Signup failed." });
+  }
+});
+
+// LOGIN
+app.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ error: "Invalid email or password." });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: "Invalid email or password." });
+    }
+
+    const token = jwt.sign(
+      { userId: user._id, email: user.email, name: user.name },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({ token, user: { name: user.name, email: user.email } });
+  } catch (error) {
+    res.status(500).json({ error: "Login failed." });
+  }
+});
 
 // Sahi order: Pehle CORS, fir JSON parsing
 app.use(cors({
