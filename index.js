@@ -104,7 +104,7 @@ async function deleteLeadById(leadId) {
   } catch (error) { throw error; }
 }
 
-app.post("/leads", async (req, res) => {
+app.post("/leads", authMiddleware , async (req, res) => {
   try {
     const lead = await createLead(req.body);
     res.status(201).json(lead);
@@ -113,7 +113,7 @@ app.post("/leads", async (req, res) => {
   }
 });
 
-app.get("/leads", async (req, res) => {
+app.get("/leads", authMiddleware, async (req, res) => {
   try {
     const leads = await readAllLeads(req.query);
     if (leads.length !== 0) {
@@ -126,7 +126,7 @@ app.get("/leads", async (req, res) => {
   }
 });
 
-app.get("/leads/:id", async (req, res) => {
+app.get("/leads/:id",authMiddleware, async (req, res) => {
   try {
     const lead = await readLeadById(req.params.id);
     if (lead) {
@@ -139,7 +139,7 @@ app.get("/leads/:id", async (req, res) => {
   }
 });
 
-app.put("/leads/:id", async (req, res) => {
+app.put("/leads/:id",authMiddleware, async (req, res) => {
   try {
     const updatedLead = await updateLeadById(req.params.id, req.body);
     if (updatedLead) {
@@ -152,7 +152,7 @@ app.put("/leads/:id", async (req, res) => {
   }
 });
 
-app.patch("/leads/:id", async (req, res) => {
+app.patch("/leads/:id", authMiddleware, async (req, res) => {
   try {
     const updatedLead = await updateLeadById(req.params.id, req.body);
     if (updatedLead) {
@@ -165,7 +165,7 @@ app.patch("/leads/:id", async (req, res) => {
   }
 });
 
-app.delete("/leads/:id", async (req, res) => {
+app.delete("/leads/:id", authMiddleware, async (req, res) => {
   try {
     const deletedLead = await deleteLeadById(req.params.id);
     if (deletedLead) {
@@ -180,7 +180,7 @@ app.delete("/leads/:id", async (req, res) => {
 
 // ── AGENTS ───────────────────────────────
 
-app.get("/agents", async (req, res) => {
+app.get("/agents", authMiddleware, async (req, res) => {
   try {
     const agents = await SalesAgent.find();
     res.json(agents);
@@ -189,7 +189,7 @@ app.get("/agents", async (req, res) => {
   }
 });
 
-app.post("/agents", async (req, res) => {
+app.post("/agents", authMiddleware, async (req, res) => {
   try {
     const agent = new SalesAgent(req.body);
     await agent.save();
@@ -199,7 +199,7 @@ app.post("/agents", async (req, res) => {
   }
 });
 
-app.delete("/agents/:id", async (req, res) => {
+app.delete("/agents/:id", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const deletedAgent = await SalesAgent.findByIdAndDelete(id);
@@ -216,7 +216,7 @@ app.delete("/agents/:id", async (req, res) => {
 
 // ── COMMENTS ─────────────────────────────
 
-app.post("/leads/:id/comments", async (req, res) => {
+app.post("/leads/:id/comments", authMiddleware, async (req, res) => {
   try {
     const { authorId, text } = req.body;
     const newComment = new Comment({
@@ -232,7 +232,7 @@ app.post("/leads/:id/comments", async (req, res) => {
   }
 });
 
-app.get("/leads/:id/comments", async (req, res) => {
+app.get("/leads/:id/comments", authMiddleware, async (req, res) => {
   try {
     const comments = await Comment.find({ lead: req.params.id });
     res.json(comments);
@@ -243,7 +243,7 @@ app.get("/leads/:id/comments", async (req, res) => {
 
 // ── REPORTS ──────────────────────────────
 
-app.get("/report/last-week", async (req, res) => {
+app.get("/report/last-week", authMiddleware, async (req, res) => {
   try {
     const lastWeek = new Date();
     lastWeek.setDate(lastWeek.getDate() - 7);
@@ -257,7 +257,7 @@ app.get("/report/last-week", async (req, res) => {
   }
 });
 
-app.get("/report/pipeline", async (req, res) => {
+app.get("/report/pipeline", authMiddleware, async (req, res) => {
   try {
     const count = await Lead.countDocuments({ status: { $ne: "Closed" } });
     res.json({ totalLeadsInPipeline: count });
